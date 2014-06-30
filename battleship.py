@@ -36,15 +36,67 @@ boards = [b for b in req.json() if b["is_test"]]
 for board in boards:
 	shots = populateBoard()
 	print shots
+	hor = 0
+	vert = 0
+	firstHit = None
+
 	while not board["is_finished"]:
+		
 		
 		flat = available(flatten(shots))
 		ind = randrange(len(flat))
-		loc = flat[ind]
-		col = char_position(loc[0])
-		row = int(loc[1]) - 1
+		loc, col, row = None, 0, 0
+		
+		if firstHit:
+#			while loc in ["MISS", "HIT", ""]:
+			if not (firstHit[0]+hor < 10 and firstHit[1]+vert < 10 and 
+					firstHit[0]+hor >= 0 and firstHit[1]+vert >= 0):
+				loc = None
+				break
+			loc = shots[firstHit[0]+hor][firstHit[1]+vert]
+			if loc in ["MISS", "HIT"]:
+				loc = None
+		
+		if not loc:
+			loc = flat[ind]
+			col = char_position(loc[0])
+			row = int(loc[1]) - 1
+			
 		resp = makeShot(loc, board["url"])
-		shots[col][row] = "HIT" if resp["is_hit"] else "MISS"
+		if resp["is_hit"]:
+			shots[col][row] = "HIT"
+			if hor == 0 and vert == 0:
+				firstHit = (col, row)
+				hor = 1
+			elif hor > 0:
+				hor += 1
+			elif hor < 0:
+				hor -= 1
+			elif vert > 0:
+				vert += 1
+			elif vert < 0:
+				vert -= 1
+				
+		else:
+			shots[col][row] = "MISS"
+			if hor == 0 and vert == 0:
+				hor = 1
+			if hor > 0:
+				hor == -1
+			elif hor < 0:
+				hor = 0
+				vert = 1
+			elif vert > 0:
+				vert == -1
+			elif vert < 0:
+				hor = 0
+				vert = 0
+				firstHit = None
+		
+		if resp["sunk"]:
+			hor = 0
+			vert = 0
+			firstHit = None
 		
 		newReq = requests.get(board["url"])
 		board = dict(board.items() + newReq.json().items()) 
