@@ -1,5 +1,5 @@
 import requests
-from random import randint
+from random import randrange
 
 def flatten(list_to_flatten):
     for elem in list_to_flatten:
@@ -11,6 +11,9 @@ def flatten(list_to_flatten):
 
 def pos_to_char(pos):
     return chr(pos + ord('A'))
+
+def char_position(letter):
+    return ord(letter) - ord('A')
 
 def populateBoard():
 	return [[pos_to_char(c)+str(r) for r in range(1,11)] for c in range(10)]
@@ -36,8 +39,10 @@ for board in boards:
 	while not board["is_finished"]:
 		
 		flat = available(flatten(shots))
-		ind = randint(len(shots))
+		ind = randrange(len(flat))
 		loc = flat[ind]
+		col = char_position(loc[0])
+		row = int(loc[1]) - 1
 		resp = makeShot(loc, board["url"])
 		shots[col][row] = "HIT" if resp["is_hit"] else "MISS"
 		
